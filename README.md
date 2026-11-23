@@ -19,7 +19,7 @@ This repository includes several test cases that exercise various ossification
 issues in open source JWT libraries. Each file in `jwks/*.json` is a JWKS that
 verifies `token.jwt`:
 
-- `A01` through `A10`: These cases include JWK for a signature
+- `A`: These cases include a JWK for a signature
     algorithm specified in RFC 9964 or draft-ietf-jose-pq-composite-sigs in the
     key set. These should be ignored by relying parties that don't yet support
     post-quantum.
