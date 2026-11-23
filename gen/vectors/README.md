@@ -4,7 +4,7 @@
 https://github.com/lamps-wg/draft-composite-sigs at commit
 `b9e2674c0072df66ea09abeabc1c1be5ef9baf29`, copied unmodified.
 
-`gen/generate.py` uses only the `pk` field of the pure ML-DSA and composite ML-DSA entries, as the
+`generate.py` uses only the `pk` field of the pure ML-DSA and composite ML-DSA entries, as the
 `pub` value of AKP keys (RFC 9964, draft-ietf-jose-pq-composite-sigs-06).
 
 These are IETF Code Components: Copyright (c) IETF Trust and the persons identified as the document

@@ -2,8 +2,9 @@
 """Generate JWKS test cases for "relying party ignores what it doesn't understand".
 
 Every case is a JWK Set containing one or more keys a typical library will not
-understand, followed by the RSA key "rsa-1". The token in testdata/token.jwt is
-signed by rsa-1 (RS256), so every case is expected to verify.
+understand, followed by the RSA key "rsa-1". Each case names a token (cases.json
+"token"): testdata/token.jwt has kid "rsa-1", testdata/token-nokid.jwt has no kid.
+Both are signed by rsa-1 (RS256), so every case is expected to verify.
 
 Keys are cached under testdata/keys/ so re-running produces stable output.
 """
@@ -17,7 +18,7 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed448, padding, rsa
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "testdata"
 KEYS = OUT / "keys"
 JWKS_DIR = OUT / "jwks"
@@ -156,14 +157,12 @@ def main():
     rsa1_jwk = rsa_pub(rsa1, kid="rsa-1", use="sig", alg="RS256")
     (OUT / "rsa-1.public.jwk.json").write_text(json.dumps(rsa1_jwk, indent=2) + "\n")
 
-    signing_input = (
-        b64u(json.dumps(TOKEN_HEADER, separators=(",", ":")).encode())
-        + "."
-        + b64u(json.dumps(TOKEN_CLAIMS, separators=(",", ":")).encode())
-    )
-    sig = rsa1.sign(signing_input.encode(), padding.PKCS1v15(), hashes.SHA256())
-    token = signing_input + "." + b64u(sig)
-    (OUT / "token.jwt").write_text(token + "\n")
+    tokens = {
+        "token.jwt": sign_token(rsa1, TOKEN_HEADER),
+        "token-nokid.jwt": sign_token(rsa1, {k: v for k, v in TOKEN_HEADER.items() if k != "kid"}),
+    }
+    for name, token in tokens.items():
+        (OUT / name).write_text(token + "\n")
 
     # --- odd keys -----------------------------------------------------------
     vectors = {t["tcId"]: t for t in json.loads(VECTORS.read_text())["tests"]}
@@ -286,24 +285,48 @@ def main():
         ("Z01-everything", "All odd keys, then rsa-1 with all unknown members, plus the set member.",
          "All of the above", everything, rsa1_everything, set_member)
     )
+    cases = [(*c, "token.jwt") for c in cases]
+
+    # Without a kid, the verifier has to consider every candidate key rather than
+    # looking up rsa-1 directly, so libraries that only parse the kid match lose
+    # that shortcut.
+    N = "RFC 7517 Section 4.5: kid is OPTIONAL; Section 5 still applies"
+    cases += [
+        ("N00-nokid-baseline",
+         "Token without kid; set contains only rsa-1. Fails if the verifier requires a kid at all.",
+         "RFC 7517 Section 4.5: kid is OPTIONAL", [], rsa1_jwk, {}, "token-nokid.jwt"),
+        ("N01-nokid-everything", "Token without kid; same set as Z01-everything.",
+         N, everything, rsa1_everything, set_member, "token-nokid.jwt"),
+    ]
 
     for old in JWKS_DIR.glob("*.json"):
         old.unlink()
     manifest = []
-    for case_id, desc, rule, odd, signer, set_extra in cases:
+    for case_id, desc, rule, odd, signer, set_extra, token_file in cases:
         jwks = {"keys": [*odd, signer], **set_extra}
         path = JWKS_DIR / f"{case_id}.json"
         path.write_text(json.dumps(jwks, indent=2) + "\n")
-        self_check(jwks, token)
+        self_check(jwks, tokens[token_file])
         manifest.append({
             "id": case_id,
             "file": f"jwks/{case_id}.json",
+            "token": token_file,
             "description": desc,
             "rule": rule,
             "expect": "verify",
         })
     (OUT / "cases.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"wrote {len(manifest)} cases to {JWKS_DIR.relative_to(ROOT)}")
+
+
+def sign_token(key, header: dict) -> str:
+    signing_input = (
+        b64u(json.dumps(header, separators=(",", ":")).encode())
+        + "."
+        + b64u(json.dumps(TOKEN_CLAIMS, separators=(",", ":")).encode())
+    )
+    sig = key.sign(signing_input.encode(), padding.PKCS1v15(), hashes.SHA256())
+    return signing_input + "." + b64u(sig)
 
 
 def self_check(jwks: dict, token: str):
