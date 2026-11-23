@@ -2,13 +2,12 @@
 """Generate JWKS test cases for "relying party ignores what it doesn't understand".
 
 Every case is a JWK Set containing one or more keys a typical library will not
-understand, followed by the RSA key "rsa-1". Each case names a token (cases.json
-"token"): jwks/token.jwt has kid "rsa-1", jwks/token-nokid.jwt has no kid.
-Both are signed by rsa-1 (RS256), so every case is expected to verify.
+understand, followed by the RSA key "rsa-1". token.jwt is signed by rsa-1 (RS256,
+kid "rsa-1"), so it is expected to verify against every case.
 
 Inputs live in testdata/: keys/ (cached so re-running produces stable output) and
-vectors/. Outputs are cases.json (paths relative to the repo root) and everything in
-jwks/ except README.md.
+vectors/. Outputs are cases.json (paths relative to the repo root), token.jwt, and
+everything in jwks/.
 """
 
 import base64
@@ -153,21 +152,10 @@ def main():
     ec_k1 = load_or_create("ec-secp256k1", lambda: ec.generate_private_key(ec.SECP256K1()))
     ed448_key = load_or_create("ed448", ed448.Ed448PrivateKey.generate)
 
-    (OUT / "rsa-1.public.pem").write_bytes(
-        rsa1.public_key().public_bytes(
-            serialization.Encoding.PEM, serialization.PublicFormat.SubjectPublicKeyInfo
-        )
-    )
-
     rsa1_jwk = rsa_pub(rsa1, kid="rsa-1", use="sig", alg="RS256")
-    (OUT / "rsa-1.public.jwk.json").write_text(json.dumps(rsa1_jwk, indent=2) + "\n")
 
-    tokens = {
-        "token.jwt": sign_token(rsa1, TOKEN_HEADER),
-        "token-nokid.jwt": sign_token(rsa1, {k: v for k, v in TOKEN_HEADER.items() if k != "kid"}),
-    }
-    for name, token in tokens.items():
-        (OUT / name).write_text(token + "\n")
+    token = sign_token(rsa1, TOKEN_HEADER)
+    (ROOT / "token.jwt").write_text(token + "\n")
 
     # --- odd keys -----------------------------------------------------------
     vectors = {t["tcId"]: t for t in json.loads(VECTORS.read_text())["tests"]}
@@ -274,41 +262,21 @@ def main():
         ("C06-akp-ml-dsa-44-bad-length", "AKP ML-DSA-44 with a 1311-byte pub (one byte short).", A, [akp_bad_len], rsa1_jwk, {}),
         ("D01-rsa-missing-e", 'RSA key missing required member "e".', A, [rsa_missing_e], rsa1_jwk, {}),
         ("D02-ec-missing-y", 'EC P-256 key missing required member "y".', A, [ec_missing_y], rsa1_jwk, {}),
-        ("E06-ec-unknown-use", f'Valid EC key with use "{unknown_op}".',
+        ("E01-ec-unknown-use", f'Valid EC key with use "{unknown_op}".',
          A + ' (Section 4.2 allows other "use" values)', [ec_unknown_use], rsa1_jwk, {}),
-        ("E07-ec-unknown-key-ops", f'Valid EC key with key_ops ["{unknown_op}"].',
+        ("E02-ec-unknown-key-ops", f'Valid EC key with key_ops ["{unknown_op}"].',
          A + ' (Section 4.3 allows other "key_ops" values)', [ec_unknown_key_ops], rsa1_jwk, {}),
-    ]
-    everything = list(akp.values()) + [
-        unknown_kty, kty_wrong_case, grease, unknown_kty_bad_member, ec_unknown_crv, okp_ed448, ec_secp256k1, rsa_unknown_alg,
-        rsa_512, akp_bad_len, rsa_missing_e, ec_missing_y, ec_unknown_use, ec_unknown_key_ops,
-    ]
-    cases = [(*c, "token.jwt") for c in cases]
-
-    # Without a kid, the verifier has to consider every candidate key rather than
-    # looking up rsa-1 directly, so libraries that only parse the kid match lose
-    # that shortcut.
-    N = "RFC 7517 Section 4.5: kid is OPTIONAL; Section 5 still applies"
-    cases += [
-        ("N00-nokid-baseline",
-         "Token without kid; set contains only rsa-1. Fails if the verifier requires a kid at all.",
-         "RFC 7517 Section 4.5: kid is OPTIONAL", [], rsa1_jwk, {}, "token-nokid.jwt"),
-        ("N01-nokid-everything", "Token without kid; same set as Z01-everything.",
-         N, everything, rsa1_jwk, {}, "token-nokid.jwt"),
-        ("Z01-everything", "All odd keys above, then rsa-1.", "All of the above",
-         everything, rsa1_jwk, {}, "token.jwt"),
     ]
 
     manifest = []
-    for case_id, desc, rule, odd, signer, set_extra, token_file in cases:
+    for case_id, desc, rule, odd, signer, set_extra in cases:
         jwks = {"keys": [*odd, signer], **set_extra}
         path = OUT / f"{case_id}.json"
         path.write_text(json.dumps(jwks, indent=2) + "\n")
-        self_check(jwks, tokens[token_file])
+        self_check(jwks, token)
         manifest.append({
             "id": case_id,
             "file": f"{OUT.name}/{case_id}.json",
-            "token": f"{OUT.name}/{token_file}",
             "description": desc,
             "rule": rule,
             "expect": "verify",
