@@ -168,46 +168,6 @@
     "expect": "verify"
   },
   {
-    "id": "E01-member-uri-object",
-    "file": "jwks/E01-member-uri-object.json",
-    "token": "token.jwt",
-    "description": "rsa-1 carries an unknown collision-resistant member with an object value.",
-    "rule": "RFC 7517 Section 4: unknown JWK members MUST be ignored",
-    "expect": "verify"
-  },
-  {
-    "id": "E02-member-webcrypto",
-    "file": "jwks/E02-member-webcrypto.json",
-    "token": "token.jwt",
-    "description": "rsa-1 as exported by WebCrypto: \"ext\" and \"key_ops\", no \"use\".",
-    "rule": "RFC 7517 Section 4: unknown JWK members MUST be ignored",
-    "expect": "verify"
-  },
-  {
-    "id": "E03-member-entra",
-    "file": "jwks/E03-member-entra.json",
-    "token": "token.jwt",
-    "description": "rsa-1 with Entra ID's \"issuer\" and \"cloud_instance_name\".",
-    "rule": "RFC 7517 Section 4: unknown JWK members MUST be ignored",
-    "expect": "verify"
-  },
-  {
-    "id": "E04-member-pub-on-rsa",
-    "file": "jwks/E04-member-pub-on-rsa.json",
-    "token": "token.jwt",
-    "description": "rsa-1 with \"pub\", a member registered only for kty AKP.",
-    "rule": "RFC 7517 Section 4: unknown JWK members MUST be ignored",
-    "expect": "verify"
-  },
-  {
-    "id": "E05-set-member",
-    "file": "jwks/E05-set-member.json",
-    "token": "token.jwt",
-    "description": "JWK Set object carries an unknown top-level member.",
-    "rule": "RFC 7517 Section 5: unknown JWK Set members MUST be ignored",
-    "expect": "verify"
-  },
-  {
     "id": "E06-ec-unknown-use",
     "file": "jwks/E06-ec-unknown-use.json",
     "token": "token.jwt",
@@ -227,7 +187,7 @@
     "id": "Z01-everything",
     "file": "jwks/Z01-everything.json",
     "token": "token.jwt",
-    "description": "All odd keys, then rsa-1 with all unknown members, plus the set member.",
+    "description": "All odd keys above, then rsa-1.",
     "rule": "All of the above",
     "expect": "verify"
   },

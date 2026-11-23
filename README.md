@@ -11,7 +11,7 @@ recommended by RFC 7517, Section 5:
 
 RFC 7517 Section 5 says implementations SHOULD ignore keys "that use 'kty' (key type) values that are
 not understood by them, that are missing required members, or for which values are out of the
-supported ranges", and Section 4 says unknown JWK members MUST be ignored. Many libraries instead
+supported ranges". Many libraries instead
 fail closed on the first key they can't parse, which makes it unsafe to add new key types (for
 example post-quantum AKP keys) to an existing JWKS.
 

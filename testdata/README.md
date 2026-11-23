@@ -20,8 +20,6 @@ ignore something RFC 7517 says it should ignore.
 | `B` | Unknown `kty` | §5 SHOULD ignore |
 | `C` | Known `kty`, unsupported `crv` / `alg` / size | §5 SHOULD ignore ("out of the supported ranges") |
 | `D` | Known `kty`, missing required member | §5 SHOULD ignore |
-| `E01`-`E04` | Unknown members on `rsa-1` itself; the key must still be used | §4 MUST ignore member |
-| `E05` | Unknown member on the JWK Set object | §5 MUST ignore member |
 | `E06`-`E07` | Unknown `use` / `key_ops` values on another key | §4.2 / §4.3 MAY be used |
 | `Z01` | All of the above in one set | |
 | `N00` | Token without `kid`, set with only `rsa-1`. Fails if the verifier requires a `kid` at all, which is a separate limitation from the one this suite targets. | §4.5 `kid` is OPTIONAL |

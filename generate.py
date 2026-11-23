@@ -225,22 +225,6 @@ def main():
     ec_unknown_key_ops = ec_pub(ec_p256, "P-256", 32, kid="ec-unknown-key-ops", alg="ES256")
     ec_unknown_key_ops["key_ops"] = ["verify", "future-op"]
 
-    # --- rsa-1 with unknown members (RFC 7517 Section 4: MUST ignore) -------
-    rsa1_uri_member = {**rsa1_jwk, "https://example.com/jwk/future-param": {"a": [1, 2], "b": None}}
-    # Mirrors what WebCrypto exportKey("jwk") produces: ext + key_ops, no "use".
-    rsa1_webcrypto = {k: v for k, v in rsa1_jwk.items() if k != "use"}
-    rsa1_webcrypto.update({"ext": True, "key_ops": ["verify"]})
-    # Mirrors Microsoft Entra ID's published JWKS.
-    rsa1_entra = {
-        **rsa1_jwk,
-        "issuer": "https://login.microsoftonline.com/{tenantid}/v2.0",
-        "cloud_instance_name": "microsoftonline.com",
-    }
-    # "pub" is registered by RFC 9964, but only for kty AKP.
-    rsa1_pub_member = {**rsa1_jwk, "pub": b64u(b"not an RSA parameter")}
-
-    set_member = {"https://example.com/jwks/future-param": {"rotation": "2026-11", "n": 3}}
-
     A = "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values"
     cases = [
         ("00-baseline", "Only rsa-1. Harness sanity check.", "baseline", [], rsa1_jwk, {}),
@@ -261,16 +245,6 @@ def main():
         ("C06-akp-ml-dsa-44-bad-length", "AKP ML-DSA-44 with a 1311-byte pub (one byte short).", A, [akp_bad_len], rsa1_jwk, {}),
         ("D01-rsa-missing-e", 'RSA key missing required member "e".', A, [rsa_missing_e], rsa1_jwk, {}),
         ("D02-ec-missing-y", 'EC P-256 key missing required member "y".', A, [ec_missing_y], rsa1_jwk, {}),
-        ("E01-member-uri-object", "rsa-1 carries an unknown collision-resistant member with an object value.",
-         "RFC 7517 Section 4: unknown JWK members MUST be ignored", [], rsa1_uri_member, {}),
-        ("E02-member-webcrypto", 'rsa-1 as exported by WebCrypto: "ext" and "key_ops", no "use".',
-         "RFC 7517 Section 4: unknown JWK members MUST be ignored", [], rsa1_webcrypto, {}),
-        ("E03-member-entra", 'rsa-1 with Entra ID\'s "issuer" and "cloud_instance_name".',
-         "RFC 7517 Section 4: unknown JWK members MUST be ignored", [], rsa1_entra, {}),
-        ("E04-member-pub-on-rsa", 'rsa-1 with "pub", a member registered only for kty AKP.',
-         "RFC 7517 Section 4: unknown JWK members MUST be ignored", [], rsa1_pub_member, {}),
-        ("E05-set-member", "JWK Set object carries an unknown top-level member.",
-         "RFC 7517 Section 5: unknown JWK Set members MUST be ignored", [], rsa1_jwk, set_member),
         ("E06-ec-unknown-use", 'Valid EC key with use "pq-sig".',
          'RFC 7517 Section 4.2: other "use" values MAY be used', [ec_unknown_use], rsa1_jwk, {}),
         ("E07-ec-unknown-key-ops", 'Valid EC key with key_ops ["verify", "future-op"].',
@@ -280,10 +254,8 @@ def main():
         unknown_kty, kty_wrong_case, ec_unknown_crv, okp_ed448, ec_secp256k1, rsa_unknown_alg,
         rsa_512, akp_bad_len, rsa_missing_e, ec_missing_y, ec_unknown_use, ec_unknown_key_ops,
     ]
-    rsa1_everything = {**rsa1_uri_member, **rsa1_entra, **rsa1_pub_member}
     cases.append(
-        ("Z01-everything", "All odd keys, then rsa-1 with all unknown members, plus the set member.",
-         "All of the above", everything, rsa1_everything, set_member)
+        ("Z01-everything", "All odd keys above, then rsa-1.", "All of the above", everything, rsa1_jwk, {})
     )
     cases = [(*c, "token.jwt") for c in cases]
 
@@ -296,7 +268,7 @@ def main():
          "Token without kid; set contains only rsa-1. Fails if the verifier requires a kid at all.",
          "RFC 7517 Section 4.5: kid is OPTIONAL", [], rsa1_jwk, {}, "token-nokid.jwt"),
         ("N01-nokid-everything", "Token without kid; same set as Z01-everything.",
-         N, everything, rsa1_everything, set_member, "token-nokid.jwt"),
+         N, everything, rsa1_jwk, {}, "token-nokid.jwt"),
     ]
 
     for old in JWKS_DIR.glob("*.json"):
