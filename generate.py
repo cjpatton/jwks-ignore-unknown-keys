@@ -7,7 +7,8 @@ understand, followed by the RSA key "rsa-1". Each case names a token (cases.json
 Both are signed by rsa-1 (RS256), so every case is expected to verify.
 
 Inputs live in testdata/: keys/ (cached so re-running produces stable output) and
-vectors/. Everything in jwks/ except README.md is generated.
+vectors/. Outputs are cases.json (paths relative to the repo root) and everything in
+jwks/ except README.md.
 """
 
 import base64
@@ -193,6 +194,23 @@ def main():
         "alg": "https://example.com/jws/alg/future",
         "k1": b64u(b"opaque future key material"),
     }
+    # Modeled on TLS GREASE (RFC 8701): a meaningless kty, no use/alg, and members of
+    # unexpected JSON types. Member names are deliberately unregistered so this
+    # doesn't overlap with unknown_kty_bad_member below. Values are fixed so results
+    # are reproducible.
+    grease = {
+        "kty": "GREASE-0a0a",
+        "kid": "grease",
+        "grease-a": "AAAA",
+        "grease-b": 1,
+        "grease-c": [True, None],
+        "grease-d": {"e": "f"},
+    }
+    # Same as unknown_kty, plus "d" holding an object. "d" is registered (RSA/EC/OKP
+    # private key) as a base64url string, but its meaning is defined per kty, so for
+    # an unknown kty it is just another member. Parsers that decode registered
+    # members before looking at kty reject it.
+    unknown_kty_bad_member = {**unknown_kty, "kid": "unknown-kty-bad-member", "d": {"e": "f"}}
     kty_wrong_case = rsa_pub(rsa_other, kid="kty-lowercase", use="sig", alg="RS256")
     kty_wrong_case["kty"] = "rsa"
 
@@ -243,6 +261,11 @@ def main():
     cases += [
         ("B01-unknown-kty", "kty is an unregistered collision-resistant name.", A, [unknown_kty], rsa1_jwk, {}),
         ("B02-kty-wrong-case", 'kty "rsa" (kty is case-sensitive, so this is not RSA).', A, [kty_wrong_case], rsa1_jwk, {}),
+        ("B03-grease", 'GREASE-style key: meaningless kty, no use/alg, unregistered members of unexpected JSON types.',
+         A, [grease], rsa1_jwk, {}),
+        ("B04-unknown-kty-registered-member",
+         'Unknown kty (as B01) plus "d" holding an object; "d" is registered as a string for RSA/EC/OKP only.',
+         A, [unknown_kty_bad_member], rsa1_jwk, {}),
         ("C01-ec-unknown-crv", 'EC key with crv "P-999".', A, [ec_unknown_crv], rsa1_jwk, {}),
         ("C02-okp-ed448", "OKP Ed448 (RFC 8037), often unsupported.", A, [okp_ed448], rsa1_jwk, {}),
         ("C03-ec-secp256k1", "EC secp256k1 / ES256K (RFC 8812), often unsupported.", A, [ec_secp256k1], rsa1_jwk, {}),
@@ -257,7 +280,7 @@ def main():
          A + ' (Section 4.3 allows other "key_ops" values)', [ec_unknown_key_ops], rsa1_jwk, {}),
     ]
     everything = list(akp.values()) + [
-        unknown_kty, kty_wrong_case, ec_unknown_crv, okp_ed448, ec_secp256k1, rsa_unknown_alg,
+        unknown_kty, kty_wrong_case, grease, unknown_kty_bad_member, ec_unknown_crv, okp_ed448, ec_secp256k1, rsa_unknown_alg,
         rsa_512, akp_bad_len, rsa_missing_e, ec_missing_y, ec_unknown_use, ec_unknown_key_ops,
     ]
     cases = [(*c, "token.jwt") for c in cases]
@@ -284,13 +307,13 @@ def main():
         self_check(jwks, tokens[token_file])
         manifest.append({
             "id": case_id,
-            "file": f"{case_id}.json",
-            "token": token_file,
+            "file": f"{OUT.name}/{case_id}.json",
+            "token": f"{OUT.name}/{token_file}",
             "description": desc,
             "rule": rule,
             "expect": "verify",
         })
-    (OUT / "cases.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    (ROOT / "cases.json").write_text(json.dumps(manifest, indent=2) + "\n")
     print(f"wrote {len(manifest)} cases to {OUT.relative_to(ROOT)}")
 
 

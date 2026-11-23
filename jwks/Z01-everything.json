@@ -86,6 +86,29 @@
       "e": "AQAB"
     },
     {
+      "kty": "GREASE-0a0a",
+      "kid": "grease",
+      "grease-a": "AAAA",
+      "grease-b": 1,
+      "grease-c": [
+        true,
+        null
+      ],
+      "grease-d": {
+        "e": "f"
+      }
+    },
+    {
+      "kty": "https://example.com/jwk/kty/future",
+      "kid": "unknown-kty-bad-member",
+      "use": "sig",
+      "alg": "https://example.com/jws/alg/future",
+      "k1": "b3BhcXVlIGZ1dHVyZSBrZXkgbWF0ZXJpYWw",
+      "d": {
+        "e": "f"
+      }
+    },
+    {
       "kty": "EC",
       "crv": "P-999",
       "kid": "ec-unknown-crv",

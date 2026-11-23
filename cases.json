@@ -1,208 +1,224 @@
 [
   {
     "id": "00-baseline",
-    "file": "00-baseline.json",
-    "token": "token.jwt",
+    "file": "jwks/00-baseline.json",
+    "token": "jwks/token.jwt",
     "description": "Only rsa-1. Harness sanity check.",
     "rule": "baseline",
     "expect": "verify"
   },
   {
     "id": "A01-akp-ml-dsa-44",
-    "file": "A01-akp-ml-dsa-44.json",
-    "token": "token.jwt",
+    "file": "jwks/A01-akp-ml-dsa-44.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-44, pure ML-DSA (RFC 9964).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A02-akp-ml-dsa-65",
-    "file": "A02-akp-ml-dsa-65.json",
-    "token": "token.jwt",
+    "file": "jwks/A02-akp-ml-dsa-65.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-65, pure ML-DSA (RFC 9964).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A03-akp-ml-dsa-87",
-    "file": "A03-akp-ml-dsa-87.json",
-    "token": "token.jwt",
+    "file": "jwks/A03-akp-ml-dsa-87.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-87, pure ML-DSA (RFC 9964).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A04-akp-ml-dsa-44-es256",
-    "file": "A04-akp-ml-dsa-44-es256.json",
-    "token": "token.jwt",
+    "file": "jwks/A04-akp-ml-dsa-44-es256.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-44-ES256, composite (draft-ietf-jose-pq-composite-sigs-06).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A05-akp-ml-dsa-65-es256",
-    "file": "A05-akp-ml-dsa-65-es256.json",
-    "token": "token.jwt",
+    "file": "jwks/A05-akp-ml-dsa-65-es256.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-65-ES256, composite (draft-ietf-jose-pq-composite-sigs-06).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A06-akp-ml-dsa-65-es384",
-    "file": "A06-akp-ml-dsa-65-es384.json",
-    "token": "token.jwt",
+    "file": "jwks/A06-akp-ml-dsa-65-es384.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-65-ES384, composite (draft-ietf-jose-pq-composite-sigs-06).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A07-akp-ml-dsa-87-es384",
-    "file": "A07-akp-ml-dsa-87-es384.json",
-    "token": "token.jwt",
+    "file": "jwks/A07-akp-ml-dsa-87-es384.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-87-ES384, composite (draft-ietf-jose-pq-composite-sigs-06).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A08-akp-ml-dsa-44-ed25519",
-    "file": "A08-akp-ml-dsa-44-ed25519.json",
-    "token": "token.jwt",
+    "file": "jwks/A08-akp-ml-dsa-44-ed25519.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-44-Ed25519, composite (draft-ietf-jose-pq-composite-sigs-06).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A09-akp-ml-dsa-65-ed25519",
-    "file": "A09-akp-ml-dsa-65-ed25519.json",
-    "token": "token.jwt",
+    "file": "jwks/A09-akp-ml-dsa-65-ed25519.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-65-Ed25519, composite (draft-ietf-jose-pq-composite-sigs-06).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "A10-akp-ml-dsa-87-ed448",
-    "file": "A10-akp-ml-dsa-87-ed448.json",
-    "token": "token.jwt",
+    "file": "jwks/A10-akp-ml-dsa-87-ed448.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-87-Ed448, composite (draft-ietf-jose-pq-composite-sigs-06).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "B01-unknown-kty",
-    "file": "B01-unknown-kty.json",
-    "token": "token.jwt",
+    "file": "jwks/B01-unknown-kty.json",
+    "token": "jwks/token.jwt",
     "description": "kty is an unregistered collision-resistant name.",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "B02-kty-wrong-case",
-    "file": "B02-kty-wrong-case.json",
-    "token": "token.jwt",
+    "file": "jwks/B02-kty-wrong-case.json",
+    "token": "jwks/token.jwt",
     "description": "kty \"rsa\" (kty is case-sensitive, so this is not RSA).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
+    "id": "B03-grease",
+    "file": "jwks/B03-grease.json",
+    "token": "jwks/token.jwt",
+    "description": "GREASE-style key: meaningless kty, no use/alg, unregistered members of unexpected JSON types.",
+    "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
+    "expect": "verify"
+  },
+  {
+    "id": "B04-unknown-kty-registered-member",
+    "file": "jwks/B04-unknown-kty-registered-member.json",
+    "token": "jwks/token.jwt",
+    "description": "Unknown kty (as B01) plus \"d\" holding an object; \"d\" is registered as a string for RSA/EC/OKP only.",
+    "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
+    "expect": "verify"
+  },
+  {
     "id": "C01-ec-unknown-crv",
-    "file": "C01-ec-unknown-crv.json",
-    "token": "token.jwt",
+    "file": "jwks/C01-ec-unknown-crv.json",
+    "token": "jwks/token.jwt",
     "description": "EC key with crv \"P-999\".",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "C02-okp-ed448",
-    "file": "C02-okp-ed448.json",
-    "token": "token.jwt",
+    "file": "jwks/C02-okp-ed448.json",
+    "token": "jwks/token.jwt",
     "description": "OKP Ed448 (RFC 8037), often unsupported.",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "C03-ec-secp256k1",
-    "file": "C03-ec-secp256k1.json",
-    "token": "token.jwt",
+    "file": "jwks/C03-ec-secp256k1.json",
+    "token": "jwks/token.jwt",
     "description": "EC secp256k1 / ES256K (RFC 8812), often unsupported.",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "C04-rsa-unknown-alg",
-    "file": "C04-rsa-unknown-alg.json",
-    "token": "token.jwt",
+    "file": "jwks/C04-rsa-unknown-alg.json",
+    "token": "jwks/token.jwt",
     "description": "RSA key with alg \"RS999\".",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "C05-rsa-512",
-    "file": "C05-rsa-512.json",
-    "token": "token.jwt",
+    "file": "jwks/C05-rsa-512.json",
+    "token": "jwks/token.jwt",
     "description": "RSA key with a 512-bit modulus (below most minimums).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "C06-akp-ml-dsa-44-bad-length",
-    "file": "C06-akp-ml-dsa-44-bad-length.json",
-    "token": "token.jwt",
+    "file": "jwks/C06-akp-ml-dsa-44-bad-length.json",
+    "token": "jwks/token.jwt",
     "description": "AKP ML-DSA-44 with a 1311-byte pub (one byte short).",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "D01-rsa-missing-e",
-    "file": "D01-rsa-missing-e.json",
-    "token": "token.jwt",
+    "file": "jwks/D01-rsa-missing-e.json",
+    "token": "jwks/token.jwt",
     "description": "RSA key missing required member \"e\".",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "D02-ec-missing-y",
-    "file": "D02-ec-missing-y.json",
-    "token": "token.jwt",
+    "file": "jwks/D02-ec-missing-y.json",
+    "token": "jwks/token.jwt",
     "description": "EC P-256 key missing required member \"y\".",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values",
     "expect": "verify"
   },
   {
     "id": "E06-ec-unknown-use",
-    "file": "E06-ec-unknown-use.json",
-    "token": "token.jwt",
+    "file": "jwks/E06-ec-unknown-use.json",
+    "token": "jwks/token.jwt",
     "description": "Valid EC key with use \"https://example.com/jwk/future\".",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values (Section 4.2 allows other \"use\" values)",
     "expect": "verify"
   },
   {
     "id": "E07-ec-unknown-key-ops",
-    "file": "E07-ec-unknown-key-ops.json",
-    "token": "token.jwt",
+    "file": "jwks/E07-ec-unknown-key-ops.json",
+    "token": "jwks/token.jwt",
     "description": "Valid EC key with key_ops [\"https://example.com/jwk/future\"].",
     "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values (Section 4.3 allows other \"key_ops\" values)",
     "expect": "verify"
   },
   {
     "id": "N00-nokid-baseline",
-    "file": "N00-nokid-baseline.json",
-    "token": "token-nokid.jwt",
+    "file": "jwks/N00-nokid-baseline.json",
+    "token": "jwks/token-nokid.jwt",
     "description": "Token without kid; set contains only rsa-1. Fails if the verifier requires a kid at all.",
     "rule": "RFC 7517 Section 4.5: kid is OPTIONAL",
     "expect": "verify"
   },
   {
     "id": "N01-nokid-everything",
-    "file": "N01-nokid-everything.json",
-    "token": "token-nokid.jwt",
+    "file": "jwks/N01-nokid-everything.json",
+    "token": "jwks/token-nokid.jwt",
     "description": "Token without kid; same set as Z01-everything.",
     "rule": "RFC 7517 Section 4.5: kid is OPTIONAL; Section 5 still applies",
     "expect": "verify"
   },
   {
     "id": "Z01-everything",
-    "file": "Z01-everything.json",
-    "token": "token.jwt",
+    "file": "jwks/Z01-everything.json",
+    "token": "jwks/token.jwt",
     "description": "All odd keys above, then rsa-1.",
     "rule": "All of the above",
     "expect": "verify"
