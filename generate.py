@@ -6,23 +6,31 @@ understand, followed by the RSA key "rsa-1". token.jwt is signed by rsa-1 (RS256
 kid "rsa-1"), so it is expected to verify against every case.
 
 Inputs live in testdata/: keys/ (cached so re-running produces stable output) and
-vectors/. Outputs are cases.json (paths relative to the repo root), token.jwt, and
-everything in jwks/.
+specs/ (the RFC 9964 and draft-ietf-jose-pq-composite-sigs-06 text, whose example
+keys are the A cases). Outputs are cases.json (paths relative to the repo root),
+token.jwt, and everything in jwks/.
 """
 
 import base64
+import hashlib
 import json
+import re
 import secrets
 from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import ec, ed448, padding, rsa
+from cryptography.hazmat.primitives.asymmetric import ec, ed448, ed25519, padding, rsa
+
+try:
+    from cryptography.hazmat.primitives.asymmetric import mldsa
+except ImportError:
+    raise SystemExit("generate.py needs a version of cryptography with ML-DSA support (tested with 50)")
 
 ROOT = Path(__file__).resolve().parent
 TESTDATA = ROOT / "testdata"
 KEYS = TESTDATA / "keys"
-VECTORS = TESTDATA / "vectors" / "draft-composite-sigs-testvectors.json"
+SPECS = TESTDATA / "specs"
 OUT = ROOT / "jwks"
 
 TOKEN_HEADER = {"alg": "RS256", "typ": "JWT", "kid": "rsa-1"}
@@ -34,33 +42,27 @@ TOKEN_CLAIMS = {
     "exp": 4102444800,  # 2100-01-01
 }
 
-# draft-ietf-jose-pq-composite-sigs-06 JOSE alg -> lamps test vector tcId
-AKP_ALGS = {
-    "ML-DSA-44": "id-ML-DSA-44",
-    "ML-DSA-65": "id-ML-DSA-65",
-    "ML-DSA-87": "id-ML-DSA-87",
-    "ML-DSA-44-ES256": "id-MLDSA44-ECDSA-P256-SHA256",
-    "ML-DSA-65-ES256": "id-MLDSA65-ECDSA-P256-SHA512",
-    "ML-DSA-65-ES384": "id-MLDSA65-ECDSA-P384-SHA512",
-    "ML-DSA-87-ES384": "id-MLDSA87-ECDSA-P384-SHA512",
-    "ML-DSA-44-Ed25519": "id-MLDSA44-Ed25519-SHA512",
-    "ML-DSA-65-Ed25519": "id-MLDSA65-Ed25519-SHA512",
-    "ML-DSA-87-Ed448": "id-MLDSA87-Ed448-SHAKE256",
+# ML-DSA parameter set -> (public key class, public key bytes, signature bytes) (FIPS 204)
+MLDSA = {
+    "ML-DSA-44": (mldsa.MLDSA44PublicKey, 1312, 2420),
+    "ML-DSA-65": (mldsa.MLDSA65PublicKey, 1952, 3309),
+    "ML-DSA-87": (mldsa.MLDSA87PublicKey, 2592, 4627),
 }
 
-# Expected serialized public key sizes (bytes), as a sanity check on the vectors.
-AKP_PUB_LEN = {
-    "ML-DSA-44": 1312,
-    "ML-DSA-65": 1952,
-    "ML-DSA-87": 2592,
-    "ML-DSA-44-ES256": 1312 + 65,
-    "ML-DSA-65-ES256": 1952 + 65,
-    "ML-DSA-65-ES384": 1952 + 97,
-    "ML-DSA-87-ES384": 2592 + 97,
-    "ML-DSA-44-Ed25519": 1312 + 32,
-    "ML-DSA-65-Ed25519": 1952 + 32,
-    "ML-DSA-87-Ed448": 2592 + 57,
+# draft-ietf-jose-pq-composite-sigs-06 Tables 4 and 6: alg -> (ML-DSA, label, pre-hash, traditional)
+COMPOSITE = {
+    "ML-DSA-44-ES256": ("ML-DSA-44", "COMPSIG-MLDSA44-ECDSA-P256-SHA256", "sha256", ("ecdsa", ec.SECP256R1(), hashes.SHA256())),
+    "ML-DSA-65-ES256": ("ML-DSA-65", "COMPSIG-MLDSA65-ECDSA-P256-SHA512", "sha512", ("ecdsa", ec.SECP256R1(), hashes.SHA256())),
+    "ML-DSA-65-ES384": ("ML-DSA-65", "COMPSIG-MLDSA65-ECDSA-P384-SHA512", "sha512", ("ecdsa", ec.SECP384R1(), hashes.SHA384())),
+    "ML-DSA-87-ES384": ("ML-DSA-87", "COMPSIG-MLDSA87-ECDSA-P384-SHA512", "sha512", ("ecdsa", ec.SECP384R1(), hashes.SHA384())),
+    "ML-DSA-44-Ed25519": ("ML-DSA-44", "COMPSIG-MLDSA44-Ed25519-SHA512", "sha512", ("ed25519",)),
+    "ML-DSA-65-Ed25519": ("ML-DSA-65", "COMPSIG-MLDSA65-Ed25519-SHA512", "sha512", ("ed25519",)),
+    "ML-DSA-87-Ed448": ("ML-DSA-87", "COMPSIG-MLDSA87-Ed448-SHAKE256", "shake256", ("ed448",)),
 }
+COMPOSITE_PREFIX = b"CompositeAlgorithmSignatures2025"
+
+# Order of the A cases.
+AKP_ALGS = [*MLDSA, *COMPOSITE]
 
 
 def b64u(data: bytes) -> str:
@@ -69,6 +71,106 @@ def b64u(data: bytes) -> str:
 
 def b64u_int(n: int) -> str:
     return b64u(n.to_bytes((n.bit_length() + 7) // 8, "big"))
+
+
+def b64d(s: str) -> bytes:
+    return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+
+def spec_appendix(path: Path, start: str, end: str) -> str:
+    """Return the text between two section headings, without page headers and footers."""
+    lines = [
+        line for line in path.read_text(encoding="utf-8-sig").split("\n")
+        if "\f" not in line
+        and not re.search(r"\[Page \d+\]$", line)
+        and not re.match(r"(RFC \d+|Internet-Draft) ", line)
+    ]
+    i = lines.index(start)
+    j = lines.index(end, i)
+    return "\n".join(lines[i + 1:j])
+
+
+def json_objects(text: str) -> list:
+    decoder, objs, i = json.JSONDecoder(), [], 0
+    while (i := text.find("{", i)) != -1:
+        obj, i = decoder.raw_decode(text, i)
+        objs.append(obj)
+    return objs
+
+
+def unfold_rfc(text: str) -> str:
+    """RFC 9964 wraps long strings at the margin with no marker: drop newlines inside strings."""
+    out, in_str, escaped = [], False, False
+    for ch in text:
+        if in_str and ch == "\n":
+            continue
+        if ch == '"' and not escaped:
+            in_str = not in_str
+        escaped = ch == "\\" and not escaped
+        out.append(ch)
+    return "".join(out)
+
+
+def unfold_rfc8792(text: str) -> str:
+    """The draft uses RFC 8792 single-backslash wrapping: '\\' ends a folded line and the
+    continuation's leading whitespace is removed (blank lines come from page breaks)."""
+    return re.sub(r"\\\n[ \n]*", "", text)
+
+
+def akp_thumbprint(jwk: dict) -> str:
+    """RFC 9964 Section 6: RFC 7638 thumbprint over alg, kty and pub."""
+    members = json.dumps({k: jwk[k] for k in ("alg", "kty", "pub")}, separators=(",", ":"), sort_keys=True)
+    return b64u(hashlib.sha256(members.encode()).digest())
+
+
+def verify_akp_jws(jwk: dict, jws: str):
+    """Verify a JWS against an AKP key (RFC 9964 or draft-ietf-jose-pq-composite-sigs-06)."""
+    head, body, sig = jws.split(".")
+    alg, msg, sig, pub = jwk["alg"], f"{head}.{body}".encode(), b64d(sig), b64d(jwk["pub"])
+    if json.loads(b64d(head))["alg"] != alg:
+        raise ValueError("JWS alg does not match JWK alg")
+    if alg in MLDSA:
+        cls, pub_len, _ = MLDSA[alg]
+        if len(pub) != pub_len:
+            raise ValueError("wrong public key length")
+        cls.from_public_bytes(pub).verify(sig, msg)
+        return
+    # Composite ML-DSA (draft-ietf-lamps-pq-composite-sigs): both components sign
+    # M' = Prefix || Label || len(ctx) || ctx || PH(M), with ctx empty in JOSE; ML-DSA
+    # uses the label as its context. Keys and signatures are ML-DSA || traditional.
+    mldsa_alg, label, prehash, trad = COMPOSITE[alg]
+    cls, pub_len, sig_len = MLDSA[mldsa_alg]
+    ph = hashlib.shake_256(msg).digest(64) if prehash == "shake256" else hashlib.new(prehash, msg).digest()
+    m_prime = COMPOSITE_PREFIX + label.encode() + b"\x00" + ph
+    cls.from_public_bytes(pub[:pub_len]).verify(sig[:sig_len], m_prime, label.encode())
+    trad_pub, trad_sig = pub[pub_len:], sig[sig_len:]
+    if trad[0] == "ecdsa":
+        ec.EllipticCurvePublicKey.from_encoded_point(trad[1], trad_pub).verify(trad_sig, m_prime, ec.ECDSA(trad[2]))
+    elif trad[0] == "ed25519":
+        ed25519.Ed25519PublicKey.from_public_bytes(trad_pub).verify(trad_sig, m_prime)
+    else:
+        ed448.Ed448PublicKey.from_public_bytes(trad_pub).verify(trad_sig, m_prime)
+
+
+def spec_akp_keys() -> dict:
+    """Extract the Appendix A.1 JOSE examples from RFC 9964 and the composite draft, check
+    each one, and return alg -> public JWK exactly as published, minus "priv"."""
+    examples = json_objects(unfold_rfc(spec_appendix(SPECS / "rfc9964.txt", "A.1.  JOSE", "A.2.  COSE")))
+    examples += json_objects(unfold_rfc8792(spec_appendix(
+        SPECS / "draft-ietf-jose-pq-composite-sigs-06.txt", "A.1.  JOSE", "A.2.  COSE")))
+    keys = {}
+    for ex in examples:
+        jwk = {k: v for k, v in ex["jwk"].items() if k != "priv"}
+        if jwk["kid"] != akp_thumbprint(jwk):
+            raise SystemExit(f"{jwk['alg']}: kid is not the key's thumbprint; extraction is wrong")
+        try:
+            verify_akp_jws(jwk, ex["jws"])
+        except (InvalidSignature, ValueError) as e:
+            raise SystemExit(f"{jwk['alg']}: example JWS does not verify: {e!r}")
+        keys[jwk["alg"]] = jwk
+    if sorted(keys) != sorted(AKP_ALGS):
+        raise SystemExit(f"expected examples for {AKP_ALGS}, found {list(keys)}")
+    return keys
 
 
 def load_or_create(name: str, factory):
@@ -158,22 +260,11 @@ def main():
     (ROOT / "token.jwt").write_text(token + "\n")
 
     # --- odd keys -----------------------------------------------------------
-    vectors = {t["tcId"]: t for t in json.loads(VECTORS.read_text())["tests"]}
-    akp = {}
-    for alg, tc in AKP_ALGS.items():
-        pub = base64.b64decode(vectors[tc]["pk"])
-        assert len(pub) == AKP_PUB_LEN[alg], (alg, len(pub))
-        akp[alg] = {
-            "kty": "AKP",
-            "kid": "akp-" + alg.lower(),
-            "use": "sig",
-            "alg": alg,
-            "pub": b64u(pub),
-        }
+    akp = spec_akp_keys()
 
     akp_bad_len = dict(akp["ML-DSA-44"])
     akp_bad_len["kid"] = "akp-ml-dsa-44-bad-length"
-    akp_bad_len["pub"] = b64u(base64.urlsafe_b64decode(akp["ML-DSA-44"]["pub"] + "==")[:-1])
+    akp_bad_len["pub"] = b64u(b64d(akp["ML-DSA-44"]["pub"])[:-1])
 
     unknown_kty = {
         "kty": "https://example.com/jwk/kty/future",
@@ -242,9 +333,10 @@ def main():
         ("00-baseline", "Only rsa-1. Harness sanity check.", "baseline", [], rsa1_jwk, {}),
     ]
     for i, alg in enumerate(AKP_ALGS, start=1):
-        kind = "pure ML-DSA (RFC 9964)" if alg.count("-") == 2 else "composite (draft-ietf-jose-pq-composite-sigs-06)"
+        source = "RFC 9964" if alg in MLDSA else "draft-ietf-jose-pq-composite-sigs-06"
         cases.append(
-            (f"A{i:02d}-akp-{alg.lower()}", f"AKP {alg}, {kind}.", A, [akp[alg]], rsa1_jwk, {})
+            (f"A{i:02d}-akp-{alg.lower()}", f"AKP {alg}: the example key from {source} Appendix A.1.",
+             A, [akp[alg]], rsa1_jwk, {})
         )
     cases += [
         ("B01-unknown-kty", "kty is an unregistered collision-resistant name.", A, [unknown_kty], rsa1_jwk, {}),
@@ -259,7 +351,7 @@ def main():
         ("C03-ec-secp256k1", "EC secp256k1 / ES256K (RFC 8812), often unsupported.", A, [ec_secp256k1], rsa1_jwk, {}),
         ("C04-rsa-unknown-alg", 'RSA key with alg "RS999".', A, [rsa_unknown_alg], rsa1_jwk, {}),
         ("C05-rsa-512", "RSA key with a 512-bit modulus (below most minimums).", A, [rsa_512], rsa1_jwk, {}),
-        ("C06-akp-ml-dsa-44-bad-length", "AKP ML-DSA-44 with a 1311-byte pub (one byte short).", A, [akp_bad_len], rsa1_jwk, {}),
+        ("C06-akp-ml-dsa-44-bad-length", "A01's ML-DSA-44 key with a 1311-byte pub (one byte short).", A, [akp_bad_len], rsa1_jwk, {}),
         ("D01-rsa-missing-e", 'RSA key missing required member "e".', A, [rsa_missing_e], rsa1_jwk, {}),
         ("D02-ec-missing-y", 'EC P-256 key missing required member "y".', A, [ec_missing_y], rsa1_jwk, {}),
         ("E01-ec-unknown-use", f'Valid EC key with use "{unknown_op}".',
