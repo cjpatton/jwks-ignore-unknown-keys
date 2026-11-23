@@ -8,8 +8,7 @@
       "x": "icAuzU0m8U7dQfYbQ1n-yVQo_4BXMWGVdx85QvIV3QU",
       "y": "WTM1pAk50fmO-e60ZjTjHX7m_regjpRzbEfTVaC8At0",
       "key_ops": [
-        "verify",
-        "future-op"
+        "https://example.com/jwk/future"
       ]
     },
     {

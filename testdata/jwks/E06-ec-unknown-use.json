@@ -4,7 +4,7 @@
       "kty": "EC",
       "crv": "P-256",
       "kid": "ec-unknown-use",
-      "use": "pq-sig",
+      "use": "https://example.com/jwk/future",
       "alg": "ES256",
       "x": "icAuzU0m8U7dQfYbQ1n-yVQo_4BXMWGVdx85QvIV3QU",
       "y": "WTM1pAk50fmO-e60ZjTjHX7m_regjpRzbEfTVaC8At0"

@@ -171,16 +171,16 @@
     "id": "E06-ec-unknown-use",
     "file": "jwks/E06-ec-unknown-use.json",
     "token": "token.jwt",
-    "description": "Valid EC key with use \"pq-sig\".",
-    "rule": "RFC 7517 Section 4.2: other \"use\" values MAY be used",
+    "description": "Valid EC key with use \"https://example.com/jwk/future\".",
+    "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values (Section 4.2 allows other \"use\" values)",
     "expect": "verify"
   },
   {
     "id": "E07-ec-unknown-key-ops",
     "file": "jwks/E07-ec-unknown-key-ops.json",
     "token": "token.jwt",
-    "description": "Valid EC key with key_ops [\"verify\", \"future-op\"].",
-    "rule": "RFC 7517 Section 4.3: other \"key_ops\" values MAY be used",
+    "description": "Valid EC key with key_ops [\"https://example.com/jwk/future\"].",
+    "rule": "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values (Section 4.3 allows other \"key_ops\" values)",
     "expect": "verify"
   },
   {

@@ -221,9 +221,11 @@ def main():
     ec_missing_y = ec_pub(ec_p256, "P-256", 32, kid="ec-missing-y", use="sig", alg="ES256")
     del ec_missing_y["y"]
 
-    ec_unknown_use = ec_pub(ec_p256, "P-256", 32, kid="ec-unknown-use", use="pq-sig", alg="ES256")
+    # Unregistered value, written as a collision-resistant name per RFC 7517 Sections 4.2 and 4.3.
+    unknown_op = "https://example.com/jwk/future"
+    ec_unknown_use = ec_pub(ec_p256, "P-256", 32, kid="ec-unknown-use", use=unknown_op, alg="ES256")
     ec_unknown_key_ops = ec_pub(ec_p256, "P-256", 32, kid="ec-unknown-key-ops", alg="ES256")
-    ec_unknown_key_ops["key_ops"] = ["verify", "future-op"]
+    ec_unknown_key_ops["key_ops"] = [unknown_op]
 
     A = "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values"
     cases = [
@@ -245,10 +247,10 @@ def main():
         ("C06-akp-ml-dsa-44-bad-length", "AKP ML-DSA-44 with a 1311-byte pub (one byte short).", A, [akp_bad_len], rsa1_jwk, {}),
         ("D01-rsa-missing-e", 'RSA key missing required member "e".', A, [rsa_missing_e], rsa1_jwk, {}),
         ("D02-ec-missing-y", 'EC P-256 key missing required member "y".', A, [ec_missing_y], rsa1_jwk, {}),
-        ("E06-ec-unknown-use", 'Valid EC key with use "pq-sig".',
-         'RFC 7517 Section 4.2: other "use" values MAY be used', [ec_unknown_use], rsa1_jwk, {}),
-        ("E07-ec-unknown-key-ops", 'Valid EC key with key_ops ["verify", "future-op"].',
-         'RFC 7517 Section 4.3: other "key_ops" values MAY be used', [ec_unknown_key_ops], rsa1_jwk, {}),
+        ("E06-ec-unknown-use", f'Valid EC key with use "{unknown_op}".',
+         A + ' (Section 4.2 allows other "use" values)', [ec_unknown_use], rsa1_jwk, {}),
+        ("E07-ec-unknown-key-ops", f'Valid EC key with key_ops ["{unknown_op}"].',
+         A + ' (Section 4.3 allows other "key_ops" values)', [ec_unknown_key_ops], rsa1_jwk, {}),
     ]
     everything = list(akp.values()) + [
         unknown_kty, kty_wrong_case, ec_unknown_crv, okp_ed448, ec_secp256k1, rsa_unknown_alg,

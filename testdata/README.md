@@ -20,7 +20,7 @@ ignore something RFC 7517 says it should ignore.
 | `B` | Unknown `kty` | §5 SHOULD ignore |
 | `C` | Known `kty`, unsupported `crv` / `alg` / size | §5 SHOULD ignore ("out of the supported ranges") |
 | `D` | Known `kty`, missing required member | §5 SHOULD ignore |
-| `E06`-`E07` | Unknown `use` / `key_ops` values on another key | §4.2 / §4.3 MAY be used |
+| `E06`-`E07` | Another key has an unregistered `use` / `key_ops` value (`https://example.com/jwk/future`). Rejecting that key is fine; rejecting the set is not. | §5 SHOULD ignore ("out of the supported ranges"); §4.2 / §4.3 allow other values |
 | `Z01` | All of the above in one set | |
 | `N00` | Token without `kid`, set with only `rsa-1`. Fails if the verifier requires a `kid` at all, which is a separate limitation from the one this suite targets. | §4.5 `kid` is OPTIONAL |
 | `N01` | Token without `kid`, same set as `Z01`. The verifier can't jump straight to `rsa-1`, so it has to cope with every other candidate key. Only meaningful if `N00` passes. | §4.5 `kid` is OPTIONAL; §5 |
