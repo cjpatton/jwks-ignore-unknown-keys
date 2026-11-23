@@ -3,10 +3,11 @@
 
 Every case is a JWK Set containing one or more keys a typical library will not
 understand, followed by the RSA key "rsa-1". Each case names a token (cases.json
-"token"): testdata/token.jwt has kid "rsa-1", testdata/token-nokid.jwt has no kid.
+"token"): jwks/token.jwt has kid "rsa-1", jwks/token-nokid.jwt has no kid.
 Both are signed by rsa-1 (RS256), so every case is expected to verify.
 
-Keys are cached under testdata/keys/ so re-running produces stable output.
+Inputs live in testdata/: keys/ (cached so re-running produces stable output) and
+vectors/. Everything in jwks/ except README.md is generated.
 """
 
 import base64
@@ -19,10 +20,10 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, ed448, padding, rsa
 
 ROOT = Path(__file__).resolve().parent
-OUT = ROOT / "testdata"
-KEYS = OUT / "keys"
-JWKS_DIR = OUT / "jwks"
-VECTORS = ROOT / "gen" / "vectors" / "draft-composite-sigs-testvectors.json"
+TESTDATA = ROOT / "testdata"
+KEYS = TESTDATA / "keys"
+VECTORS = TESTDATA / "vectors" / "draft-composite-sigs-testvectors.json"
+OUT = ROOT / "jwks"
 
 TOKEN_HEADER = {"alg": "RS256", "typ": "JWT", "kid": "rsa-1"}
 TOKEN_CLAIMS = {
@@ -140,7 +141,10 @@ def ec_pub(key, crv: str, size: int, **extra) -> dict:
 
 def main():
     KEYS.mkdir(parents=True, exist_ok=True)
-    JWKS_DIR.mkdir(parents=True, exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
+    for pattern in ("*.json", "*.jwt", "*.pem"):
+        for old in OUT.glob(pattern):
+            old.unlink()
 
     rsa1 = load_or_create("rsa-1", lambda: rsa.generate_private_key(65537, 2048))
     rsa_other = load_or_create("rsa-other", lambda: rsa.generate_private_key(65537, 2048))
@@ -256,9 +260,6 @@ def main():
         unknown_kty, kty_wrong_case, ec_unknown_crv, okp_ed448, ec_secp256k1, rsa_unknown_alg,
         rsa_512, akp_bad_len, rsa_missing_e, ec_missing_y, ec_unknown_use, ec_unknown_key_ops,
     ]
-    cases.append(
-        ("Z01-everything", "All odd keys above, then rsa-1.", "All of the above", everything, rsa1_jwk, {})
-    )
     cases = [(*c, "token.jwt") for c in cases]
 
     # Without a kid, the verifier has to consider every candidate key rather than
@@ -271,26 +272,26 @@ def main():
          "RFC 7517 Section 4.5: kid is OPTIONAL", [], rsa1_jwk, {}, "token-nokid.jwt"),
         ("N01-nokid-everything", "Token without kid; same set as Z01-everything.",
          N, everything, rsa1_jwk, {}, "token-nokid.jwt"),
+        ("Z01-everything", "All odd keys above, then rsa-1.", "All of the above",
+         everything, rsa1_jwk, {}, "token.jwt"),
     ]
 
-    for old in JWKS_DIR.glob("*.json"):
-        old.unlink()
     manifest = []
     for case_id, desc, rule, odd, signer, set_extra, token_file in cases:
         jwks = {"keys": [*odd, signer], **set_extra}
-        path = JWKS_DIR / f"{case_id}.json"
+        path = OUT / f"{case_id}.json"
         path.write_text(json.dumps(jwks, indent=2) + "\n")
         self_check(jwks, tokens[token_file])
         manifest.append({
             "id": case_id,
-            "file": f"jwks/{case_id}.json",
+            "file": f"{case_id}.json",
             "token": token_file,
             "description": desc,
             "rule": rule,
             "expect": "verify",
         })
     (OUT / "cases.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"wrote {len(manifest)} cases to {JWKS_DIR.relative_to(ROOT)}")
+    print(f"wrote {len(manifest)} cases to {OUT.relative_to(ROOT)}")
 
 
 def sign_token(key, header: dict) -> str:
