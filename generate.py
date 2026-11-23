@@ -7,15 +7,13 @@ kid "rsa-1"), so it is expected to verify against every case.
 
 Inputs live in testdata/: keys/ (cached so re-running produces stable output) and
 specs/ (the RFC 9964 and draft-ietf-jose-pq-composite-sigs-06 text, whose example
-keys are the A cases). Outputs are cases.json (paths relative to the repo root),
-token.jwt, and everything in jwks/.
+keys are the A cases). Outputs are token.jwt and everything in jwks/.
 """
 
 import base64
 import hashlib
 import json
 import re
-import secrets
 from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
@@ -41,6 +39,14 @@ TOKEN_CLAIMS = {
     "iat": 1767225600,  # 2026-01-01
     "exp": 4102444800,  # 2100-01-01
 }
+
+# A 512-bit RSA modulus for the C05 case. Modern cryptography libraries don't
+# generate RSA moduli this small.
+RSA_512_MODULUS = int(
+    "d653a7633bf6313310cf76ddff0c18dc0e622bcd4e047469724758264b9a8324"
+    "1158d8c21b27fb08606327be275d1f9ddae7767c2118e92179c6b464496728cb",
+    16,
+)
 
 # ML-DSA parameter set -> (public key class, public key bytes, signature bytes) (FIPS 204)
 MLDSA = {
@@ -188,43 +194,6 @@ def load_or_create(name: str, factory):
     return key
 
 
-def is_probable_prime(n: int, rounds: int = 40) -> bool:
-    if n < 4:
-        return n in (2, 3)
-    if n % 2 == 0:
-        return False
-    d, r = n - 1, 0
-    while d % 2 == 0:
-        d //= 2
-        r += 1
-    for _ in range(rounds):
-        x = pow(secrets.randbelow(n - 3) + 2, d, n)
-        if x in (1, n - 1):
-            continue
-        for _ in range(r - 1):
-            x = pow(x, 2, n)
-            if x == n - 1:
-                break
-        else:
-            return False
-    return True
-
-
-def rsa512_modulus() -> int:
-    # cryptography refuses to generate keys this small, so build the modulus by hand.
-    path = KEYS / "rsa-512.json"
-    if path.exists():
-        return int(json.loads(path.read_text())["n"], 16)
-    primes = []
-    while len(primes) < 2:
-        p = secrets.randbits(256) | (1 << 255) | (1 << 254) | 1
-        if is_probable_prime(p) and (p - 1) % 65537 != 0:
-            primes.append(p)
-    n = primes[0] * primes[1]
-    path.write_text(json.dumps({"n": format(n, "x")}) + "\n")
-    return n
-
-
 def rsa_pub(key, **extra) -> dict:
     nums = key.public_key().public_numbers()
     return {"kty": "RSA", **extra, "n": b64u_int(nums.n), "e": b64u_int(nums.e)}
@@ -313,7 +282,7 @@ def main():
         "kid": "rsa-512",
         "use": "sig",
         "alg": "RS256",
-        "n": b64u_int(rsa512_modulus()),
+        "n": b64u_int(RSA_512_MODULUS),
         "e": "AQAB",
     }
 
@@ -328,53 +297,32 @@ def main():
     ec_unknown_key_ops = ec_pub(ec_p256, "P-256", 32, kid="ec-unknown-key-ops", alg="ES256")
     ec_unknown_key_ops["key_ops"] = [unknown_op]
 
-    A = "RFC 7517 Section 5: SHOULD ignore keys with unsupported kty or out-of-range values"
-    cases = [
-        ("00-baseline", "Only rsa-1. Harness sanity check.", "baseline", [], rsa1_jwk, {}),
-    ]
+    # Each case is the odd key(s) followed by rsa-1.
+    cases = [("00-baseline", [])]  # harness sanity check
     for i, alg in enumerate(AKP_ALGS, start=1):
-        source = "RFC 9964" if alg in MLDSA else "draft-ietf-jose-pq-composite-sigs-06"
-        cases.append(
-            (f"A{i:02d}-akp-{alg.lower()}", f"AKP {alg}: the example key from {source} Appendix A.1.",
-             A, [akp[alg]], rsa1_jwk, {})
-        )
+        cases.append((f"A{i:02d}-akp-{alg.lower()}", [akp[alg]]))
     cases += [
-        ("B01-unknown-kty", "kty is an unregistered collision-resistant name.", A, [unknown_kty], rsa1_jwk, {}),
-        ("B02-kty-wrong-case", 'kty "rsa" (kty is case-sensitive, so this is not RSA).', A, [kty_wrong_case], rsa1_jwk, {}),
-        ("B03-grease", 'GREASE-style key: meaningless kty, no use/alg, unregistered members of unexpected JSON types.',
-         A, [grease], rsa1_jwk, {}),
-        ("B04-unknown-kty-registered-member",
-         'Unknown kty (as B01) plus "d" holding an object; "d" is registered as a string for RSA/EC/OKP only.',
-         A, [unknown_kty_bad_member], rsa1_jwk, {}),
-        ("C01-ec-unknown-crv", 'EC key with crv "P-999".', A, [ec_unknown_crv], rsa1_jwk, {}),
-        ("C02-okp-ed448", "OKP Ed448 (RFC 8037), often unsupported.", A, [okp_ed448], rsa1_jwk, {}),
-        ("C03-ec-secp256k1", "EC secp256k1 / ES256K (RFC 8812), often unsupported.", A, [ec_secp256k1], rsa1_jwk, {}),
-        ("C04-rsa-unknown-alg", 'RSA key with alg "RS999".', A, [rsa_unknown_alg], rsa1_jwk, {}),
-        ("C05-rsa-512", "RSA key with a 512-bit modulus (below most minimums).", A, [rsa_512], rsa1_jwk, {}),
-        ("C06-akp-ml-dsa-44-bad-length", "A01's ML-DSA-44 key with a 1311-byte pub (one byte short).", A, [akp_bad_len], rsa1_jwk, {}),
-        ("D01-rsa-missing-e", 'RSA key missing required member "e".', A, [rsa_missing_e], rsa1_jwk, {}),
-        ("D02-ec-missing-y", 'EC P-256 key missing required member "y".', A, [ec_missing_y], rsa1_jwk, {}),
-        ("E01-ec-unknown-use", f'Valid EC key with use "{unknown_op}".',
-         A + ' (Section 4.2 allows other "use" values)', [ec_unknown_use], rsa1_jwk, {}),
-        ("E02-ec-unknown-key-ops", f'Valid EC key with key_ops ["{unknown_op}"].',
-         A + ' (Section 4.3 allows other "key_ops" values)', [ec_unknown_key_ops], rsa1_jwk, {}),
+        ("B01-unknown-kty", [unknown_kty]),
+        ("B02-kty-wrong-case", [kty_wrong_case]),  # kty is case-sensitive, so "rsa" is not RSA
+        ("B03-grease", [grease]),
+        ("B04-unknown-kty-registered-member", [unknown_kty_bad_member]),
+        ("C01-ec-unknown-crv", [ec_unknown_crv]),
+        ("C02-okp-ed448", [okp_ed448]),  # RFC 8037, often unsupported
+        ("C03-ec-secp256k1", [ec_secp256k1]),  # RFC 8812, often unsupported
+        ("C04-rsa-unknown-alg", [rsa_unknown_alg]),
+        ("C05-rsa-512", [rsa_512]),  # below most minimum key sizes
+        ("C06-akp-ml-dsa-44-bad-length", [akp_bad_len]),
+        ("D01-rsa-missing-e", [rsa_missing_e]),
+        ("D02-ec-missing-y", [ec_missing_y]),
+        ("E01-ec-unknown-use", [ec_unknown_use]),
+        ("E02-ec-unknown-key-ops", [ec_unknown_key_ops]),
     ]
 
-    manifest = []
-    for case_id, desc, rule, odd, signer, set_extra in cases:
-        jwks = {"keys": [*odd, signer], **set_extra}
-        path = OUT / f"{case_id}.json"
-        path.write_text(json.dumps(jwks, indent=2) + "\n")
+    for case_id, odd in cases:
+        jwks = {"keys": [*odd, rsa1_jwk]}
+        (OUT / f"{case_id}.json").write_text(json.dumps(jwks, indent=2) + "\n")
         self_check(jwks, token)
-        manifest.append({
-            "id": case_id,
-            "file": f"{OUT.name}/{case_id}.json",
-            "description": desc,
-            "rule": rule,
-            "expect": "verify",
-        })
-    (ROOT / "cases.json").write_text(json.dumps(manifest, indent=2) + "\n")
-    print(f"wrote {len(manifest)} cases to {OUT.relative_to(ROOT)}")
+    print(f"wrote {len(cases)} cases to {OUT.relative_to(ROOT)}")
 
 
 def sign_token(key, header: dict) -> str:
