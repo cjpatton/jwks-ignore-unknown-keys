@@ -1,0 +1,18 @@
+{
+  "keys": [
+    {
+      "kty": "EC",
+      "crv": "P-999",
+      "kid": "2026-01",
+      "x": "R2mofTB_nUUCkqgX_GBr3C7AtcZTSkI2rr40BaFYZ8mYDAEzUDOSOHD17AA3GRuJ",
+      "y": "g115yDg7c6JMN3upTqoPYpsO-0S12hDau2BDmsKxFOMaZKIbBVaBUTKwWPGM1NKb"
+    },
+    {
+      "kty": "EC",
+      "crv": "P-256",
+      "kid": "2026-01",
+      "x": "icAuzU0m8U7dQfYbQ1n-yVQo_4BXMWGVdx85QvIV3QU",
+      "y": "WTM1pAk50fmO-e60ZjTjHX7m_regjpRzbEfTVaC8At0"
+    }
+  ]
+}
