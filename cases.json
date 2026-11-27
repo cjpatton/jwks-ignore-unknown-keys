@@ -1,0 +1,377 @@
+[
+  {
+    "name": "00-baseline",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/00-baseline.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A01-akp-ml-dsa-44",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A01-akp-ml-dsa-44.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A02-akp-ml-dsa-65",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A02-akp-ml-dsa-65.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A03-akp-ml-dsa-87",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A03-akp-ml-dsa-87.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A04-akp-ml-dsa-44-es256",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A04-akp-ml-dsa-44-es256.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A05-akp-ml-dsa-65-es256",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A05-akp-ml-dsa-65-es256.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A06-akp-ml-dsa-65-es384",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A06-akp-ml-dsa-65-es384.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A07-akp-ml-dsa-87-es384",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A07-akp-ml-dsa-87-es384.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A08-akp-ml-dsa-44-ed25519",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A08-akp-ml-dsa-44-ed25519.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A09-akp-ml-dsa-65-ed25519",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A09-akp-ml-dsa-65-ed25519.json",
+    "expected": "verify"
+  },
+  {
+    "name": "A10-akp-ml-dsa-87-ed448",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/A10-akp-ml-dsa-87-ed448.json",
+    "expected": "verify"
+  },
+  {
+    "name": "B01-unknown-kty",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/B01-unknown-kty.json",
+    "expected": "verify"
+  },
+  {
+    "name": "B02-kty-wrong-case",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/B02-kty-wrong-case.json",
+    "expected": "verify"
+  },
+  {
+    "name": "B03-grease",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/B03-grease.json",
+    "expected": "verify"
+  },
+  {
+    "name": "B04-unknown-kty-registered-member",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/B04-unknown-kty-registered-member.json",
+    "expected": "verify"
+  },
+  {
+    "name": "B05-unknown-kty-same-kid",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/B05-unknown-kty-same-kid.json",
+    "expected": "verify"
+  },
+  {
+    "name": "C01-ec-unknown-crv",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/C01-ec-unknown-crv.json",
+    "expected": "verify"
+  },
+  {
+    "name": "C02-okp-ed448",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/C02-okp-ed448.json",
+    "expected": "verify"
+  },
+  {
+    "name": "C03-ec-secp256k1",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/C03-ec-secp256k1.json",
+    "expected": "verify"
+  },
+  {
+    "name": "C04-rsa-unknown-alg",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/C04-rsa-unknown-alg.json",
+    "expected": "verify"
+  },
+  {
+    "name": "C05-rsa-512",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/C05-rsa-512.json",
+    "expected": "verify"
+  },
+  {
+    "name": "C06-akp-ml-dsa-44-bad-length",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/C06-akp-ml-dsa-44-bad-length.json",
+    "expected": "verify"
+  },
+  {
+    "name": "C07-rsa-1024-signing-key",
+    "token": "tokens/rs256-rsa-1024.jwt",
+    "jwks": "jwks/C07-rsa-1024-signing-key.json",
+    "expected": "reject",
+    "failure": "rsa-modulus-too-small"
+  },
+  {
+    "name": "D01-rsa-missing-e",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/D01-rsa-missing-e.json",
+    "expected": "verify"
+  },
+  {
+    "name": "D02-ec-missing-y",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/D02-ec-missing-y.json",
+    "expected": "verify"
+  },
+  {
+    "name": "E01-ec-unknown-use",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/E01-ec-unknown-use.json",
+    "expected": "verify"
+  },
+  {
+    "name": "E02-ec-unknown-key-ops",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/E02-ec-unknown-key-ops.json",
+    "expected": "verify"
+  },
+  {
+    "name": "F01-ec-unknown-crv-same-kid",
+    "token": "tokens/es256-shared-kid.jwt",
+    "jwks": "jwks/F01-ec-unknown-crv-same-kid.json",
+    "expected": "verify"
+  },
+  {
+    "name": "F02-ec-other-crv-same-kid",
+    "token": "tokens/es256-shared-kid.jwt",
+    "jwks": "jwks/F02-ec-other-crv-same-kid.json",
+    "expected": "verify"
+  },
+  {
+    "name": "G01-unknown-jwk-member",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/G01-unknown-jwk-member.json",
+    "expected": "verify"
+  },
+  {
+    "name": "G02-unknown-jwks-member",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/G02-unknown-jwks-member.json",
+    "expected": "verify"
+  },
+  {
+    "name": "H01-kid-selects-signer",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/H01-kid-selects-signer.json",
+    "expected": "verify"
+  },
+  {
+    "name": "H02-no-kid-single-key",
+    "token": "tokens/rs256-no-kid.jwt",
+    "jwks": "jwks/H02-no-kid-single-key.json",
+    "expected": "verify"
+  },
+  {
+    "name": "H03-wrong-kid",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/H03-wrong-kid.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  },
+  {
+    "name": "H04-wrong-signature",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/H04-wrong-signature.json",
+    "expected": "reject",
+    "failure": "signature-mismatch"
+  },
+  {
+    "name": "H05-kid-incompatible-alg",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/H05-kid-incompatible-alg.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  },
+  {
+    "name": "H06-kid-incompatible-kty",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/H06-kid-incompatible-kty.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  },
+  {
+    "name": "H07-kid-with-untagged-keys",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/H07-kid-with-untagged-keys.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  },
+  {
+    "name": "I01-no-kid-mixed-set",
+    "token": "tokens/rs256-no-kid.jwt",
+    "jwks": "jwks/I01-no-kid-mixed-set.json",
+    "expected": "verify"
+  },
+  {
+    "name": "I02-no-kid-no-compatible-key",
+    "token": "tokens/rs256-no-kid.jwt",
+    "jwks": "jwks/I02-no-kid-no-compatible-key.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  },
+  {
+    "name": "I03-retry-after-import-failure",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/I03-retry-after-import-failure.json",
+    "expected": "verify",
+    "selection": "try-candidates"
+  },
+  {
+    "name": "I04-retry-after-signature-mismatch",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/I04-retry-after-signature-mismatch.json",
+    "expected": "verify",
+    "selection": "try-candidates"
+  },
+  {
+    "name": "I05-no-kid-mixed-set-tagged-signer",
+    "token": "tokens/rs256-no-kid.jwt",
+    "jwks": "jwks/I05-no-kid-mixed-set-tagged-signer.json",
+    "expected": "verify"
+  },
+  {
+    "name": "J01-shared-kid-different-kty-rs256",
+    "token": "tokens/rs256-shared-kid.jwt",
+    "jwks": "jwks/J01-shared-kid-different-kty.json",
+    "expected": "verify"
+  },
+  {
+    "name": "J02-shared-kid-different-kty-es256",
+    "token": "tokens/es256-shared-kid.jwt",
+    "jwks": "jwks/J01-shared-kid-different-kty.json",
+    "expected": "verify"
+  },
+  {
+    "name": "J03-shared-kid-different-alg-rs256",
+    "token": "tokens/rs256-shared-kid.jwt",
+    "jwks": "jwks/J03-shared-kid-different-alg.json",
+    "expected": "verify"
+  },
+  {
+    "name": "J04-shared-kid-different-alg-rs384",
+    "token": "tokens/rs384-shared-kid.jwt",
+    "jwks": "jwks/J03-shared-kid-different-alg.json",
+    "expected": "verify"
+  },
+  {
+    "name": "K01-rsa-unknown-alg-same-kid",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/K01-rsa-unknown-alg-same-kid.json",
+    "expected": "verify"
+  },
+  {
+    "name": "L01-use-encryption",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L01-use-encryption.json",
+    "expected": "verify"
+  },
+  {
+    "name": "L02-use-unknown",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L02-use-unknown.json",
+    "expected": "verify"
+  },
+  {
+    "name": "L03-key-ops-encryption",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L03-key-ops-encryption.json",
+    "expected": "verify"
+  },
+  {
+    "name": "L04-key-ops-unknown",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L04-key-ops-unknown.json",
+    "expected": "verify"
+  },
+  {
+    "name": "L05-key-ops-duplicate-verify",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L05-key-ops-duplicate-verify.json",
+    "expected": "verify"
+  },
+  {
+    "name": "L06-signer-use-encryption",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L06-signer-use-encryption.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  },
+  {
+    "name": "L07-signer-key-ops-encryption",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L07-signer-key-ops-encryption.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  },
+  {
+    "name": "L08-signer-key-ops-extension",
+    "token": "tokens/rs256.jwt",
+    "jwks": "jwks/L08-signer-key-ops-extension.json",
+    "expected": "verify"
+  },
+  {
+    "name": "M01-unsigned-none",
+    "token": "tokens/unsigned-none.jwt",
+    "jwks": "jwks/00-baseline.json",
+    "expected": "reject",
+    "failure": "algorithm-not-accepted"
+  },
+  {
+    "name": "M02-unsigned-uppercase-none",
+    "token": "tokens/unsigned-uppercase-none.jwt",
+    "jwks": "jwks/00-baseline.json",
+    "expected": "reject",
+    "failure": "algorithm-not-accepted"
+  },
+  {
+    "name": "M03-unsigned-mixed-case-none",
+    "token": "tokens/unsigned-mixed-case-none.jwt",
+    "jwks": "jwks/00-baseline.json",
+    "expected": "reject",
+    "failure": "algorithm-not-accepted"
+  },
+  {
+    "name": "M04-hs256-with-public-jwks",
+    "token": "tokens/hs256.jwt",
+    "jwks": "jwks/M04-hs256-with-public-jwks.json",
+    "expected": "reject",
+    "failure": "no-eligible-key"
+  }
+]

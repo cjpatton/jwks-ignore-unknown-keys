@@ -1,0 +1,17 @@
+{
+  "keys": [
+    {
+      "kty": "RSA",
+      "kid": "2026-01",
+      "n": "iLmZXD-7GuDmjQ6-IDHotz5fRqT8IH5nT1AaXtnzONH8dm0AmolrO9oM_1KMB_gCGkaHpoidiIfde6qJ8UgXqLClDw76KeSHXdA35fvfRwsSCiRjV5zjnEGJ7HTT5_kfuDD1GY7Q8e2VX8lLMnWPcqlaJDzt5NY1er3mDkyAHDJOum65ZNDebm6Kct7iadzqAZQH5s1kTl9V6lvvI1Nq0YRtZI12kq6h3SCyBsXIXjxfeY-yRiQp9qkH_G0HMDJQmWZ6Xl2Gw7m2heMKjq-QNqilemHIih-JTv3r5RDNaJ8yD8uq7GAYdHPAaLH6zSqHDJvWAHJxUbNyahOkQQaNpw",
+      "e": "AQAB"
+    },
+    {
+      "kty": "EC",
+      "crv": "P-256",
+      "kid": "2026-01",
+      "x": "icAuzU0m8U7dQfYbQ1n-yVQo_4BXMWGVdx85QvIV3QU",
+      "y": "WTM1pAk50fmO-e60ZjTjHX7m_regjpRzbEfTVaC8At0"
+    }
+  ]
+}
