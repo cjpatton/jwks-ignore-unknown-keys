@@ -156,6 +156,7 @@ test inputs for generating fixtures.
 [jws-alg]: https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1.1
 [key-ops]: https://www.rfc-editor.org/rfc/rfc7517.html#section-4.3
 [kid]: https://www.rfc-editor.org/rfc/rfc7517.html#section-4.5
+[pyjwt]: https://github.com/jpadilla/pyjwt
 [rs256]: https://www.rfc-editor.org/rfc/rfc7518.html#section-3.3
 [selection]: https://www.rfc-editor.org/rfc/rfc7515.html#appendix-D
 [unsecured-jws]: https://www.rfc-editor.org/rfc/rfc7518.html#section-3.6
